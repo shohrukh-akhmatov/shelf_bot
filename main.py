@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get the token from environment variable
+# # Get the token from environment variable
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 if not BOT_TOKEN:
@@ -70,6 +70,11 @@ def handle_text(message):
             date_text = message.text.strip().replace('-', '.').replace('/', '.').replace(' ', '.').replace(',', '.')
             exp_date = datetime.strptime(date_text, "%d.%m.%Y").date()
 
+            if exp_date < datetime.today().date():
+                bot.send_message(message.chat.id, "Дата окончания срока годности не может быть в прошлом. Введите корректную дату.")
+                bot.register_next_step_handler(message, handle_text)
+                return
+            
             # If the user sends a date without selecting returnable, register it as non-returnable
             if message.chat.id in user_photos:
                 photo = user_photos.pop(message.chat.id)
@@ -82,14 +87,13 @@ def handle_text(message):
                 conn.commit()
                 conn.close()
 
-                bot.send_message(message.chat.id,
-                                 f"Товар добавлен!🤗")
+                bot.send_message(message.chat.id, f"Товар добавлен!🤗")
 
                 # After saving, return to the main menu (no more next step handlers)
                 show_main_menu(message)
         except ValueError:
             bot.send_message(message.chat.id, "Некорректная дата. Введите дату в формате \"дд.мм.гггг\".")
-
+            bot.register_next_step_handler(message, handle_text)
 
 def show_main_menu(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -159,7 +163,7 @@ def handle_date(message, photo, returnable):
         # Check if the adjusted expiration date is in the future
         if adjusted_exp_date < datetime.today().date():
             bot.send_message(message.chat.id, "Дата окончания срока годности или возврата не может быть в прошлом."
-                                              "Пожалуйста, введите корректную дату.")
+                                              " Пожалуйста, введите корректную дату.")
             bot.register_next_step_handler(message, handle_date, photo, returnable)
             return
 
