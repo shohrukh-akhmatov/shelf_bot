@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 import os
+import logging
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -13,9 +17,10 @@ load_dotenv()
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 if not BOT_TOKEN:
+    logger.error("No TELEGRAM_BOT_TOKEN found in environment variables")
     raise ValueError("No TELEGRAM_BOT_TOKEN found in environment variables")
 
-print(f"Loaded bot token")
+logger.info("Loaded bot token")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -255,4 +260,4 @@ if __name__ == '__main__':
         bot.polling(none_stop=True)
     except KeyboardInterrupt:
         scheduler.shutdown()
-        print("Bot stopped.")
+        logger.info("Bot stopped.")
